@@ -1,0 +1,31 @@
+{
+  "name": "putzbot",
+  "version": "1.0.0",
+  "description": "A telegram bot for cleaning duties",
+  "main": "out/index.js",
+  "scripts": {
+    "dev": "ts-node src/index.ts",
+    "build": "tsc",
+    "start": "tsc && node out/index.js"
+  },
+  "keywords": [
+    "telegram",
+    "bot",
+    "cleaning",
+    "duties",
+    "automation"
+  ],
+  "author": "Eric Matala de Mazza",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/node": "^18.16.1",
+    "@types/node-cron": "^3.0.7",
+    "ts-node": "^10.9.1",
+    "typescript": "^5.0.4"
+  },
+  "dependencies": {
+    "dotenv": "^16.0.3",
+    "node-cron": "^3.0.2",
+    "telegraf": "^4.12.2"
+  }
+}
