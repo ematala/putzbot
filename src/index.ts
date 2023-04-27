@@ -23,7 +23,17 @@ bot.command("get", (ctx) => {
   else ctx.reply(`Du bist dran mit ${duty.title} (${duty.description})`);
 });
 
-bot.command("getall", (ctx) => {});
+bot.command("getall", (ctx) => {
+  const message = mapping
+    .map(({ roomie, duty, done }) =>
+      done
+        ? `${roomie.name} ist fertig`
+        : `${roomie.name} ist dran mit ${duty.title} (${duty.description})`
+    )
+    .join("\n");
+  ctx.reply(message);
+});
+
 bot.command("done", (ctx) => {});
 bot.command("off", (ctx) => {});
 
