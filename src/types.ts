@@ -6,7 +6,7 @@ export interface Roomie {
 
 export interface Duty {
   id: number;
-  name: string;
+  title: string;
   description: string;
 }
 
