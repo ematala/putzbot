@@ -1,7 +1,7 @@
 import "dotenv/config";
 import { Telegraf } from "telegraf";
 import { schedule } from "node-cron";
-import { mapping } from "./data";
+import { duties, mapping } from "./data";
 import { getTrash } from "./utils";
 import { TRASHID } from "./constants";
 
@@ -44,8 +44,6 @@ bot.command("done", (ctx) => {
   }
 });
 
-bot.command("off", (ctx) => {});
-
 const remind = () =>
   Promise.all(
     mapping
@@ -73,8 +71,21 @@ bot.command("remind", async (ctx) => {
   ctx.reply("Ich habe die anderen daran erinnert ihre Dienste zu machen.");
 });
 
-// send out reminders every sunday at 6pm
-schedule("0 18 * * sun", remind);
+const rotate = () => {
+  if (!mapping.every(({ done }) => done)) remind();
+  else {
+    duties.push(duties.shift()!);
+    mapping.forEach((m) => {
+      m.done = false;
+      m.duty = duties[m.duty.id];
+    });
+  }
+};
+
+bot.command("rotate", rotate);
+
+// rotate duties every sunday at 6pm
+schedule("0 18 * * sun", rotate);
 
 // send out trash reminders every tuesday at 6pm
 schedule("0 18 * * tue", remindTrash);
