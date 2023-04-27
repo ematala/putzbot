@@ -25,7 +25,13 @@ export const duties: Array<Duty> = [
   },
 ];
 
-export const mapping: Array<Mapping> = [];
+export const mapping: Array<Mapping> = Array.from({
+  length: roomies.length,
+}).map((_, i) => ({
+  roomie: roomies[i],
+  duty: duties[i],
+  done: false,
+}));
 
 export const trash: Trash = {
   "2023-05-04": [1, 2],

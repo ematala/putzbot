@@ -1,12 +1,15 @@
 import "dotenv/config";
 import { Telegraf } from "telegraf";
 import { schedule } from "node-cron";
-import { duties, mapping } from "./data";
+import { duties, mapping, roomies } from "./data";
 import { getTrash } from "./utils";
 import { TRASHID } from "./constants";
 
 if (!process.env.TELEGRAM_BOT_TOKEN)
-  throw new Error("TELEGRAM_BOT_TOKEN must be provided!");
+  throw new Error("TELEGRAM_BOT_TOKEN must be provided");
+
+if (roomies.length !== duties.length)
+  throw new Error("roomies and duties must be the same length");
 
 const bot = new Telegraf(process.env.TELEGRAM_BOT_TOKEN);
 
