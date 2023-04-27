@@ -34,7 +34,15 @@ bot.command("getall", (ctx) => {
   ctx.reply(message);
 });
 
-bot.command("done", (ctx) => {});
+bot.command("done", (ctx) => {
+  const m = mapping.find(({ roomie }) => roomie.id === ctx.chat.id)!;
+  if (m.done) return ctx.reply("Du bist schon fertig");
+  else {
+    m.done = true;
+    ctx.reply("Super, du hast deinen Dienst für diese Woche erledigt!");
+  }
+});
+
 bot.command("off", (ctx) => {});
 
 const remind = () =>
