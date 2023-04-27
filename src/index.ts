@@ -1,8 +1,9 @@
 import "dotenv/config";
 import { Telegraf } from "telegraf";
-import { message } from "telegraf/filters";
 import { schedule } from "node-cron";
 import { mapping } from "./data";
+import { getTrash } from "./utils";
+import { TRASHID } from "./constants";
 
 if (!process.env.TELEGRAM_BOT_TOKEN)
   throw new Error("TELEGRAM_BOT_TOKEN must be provided!");
@@ -11,7 +12,7 @@ const bot = new Telegraf(process.env.TELEGRAM_BOT_TOKEN);
 
 bot.command("start", (ctx) =>
   ctx.reply(
-    `Hi ${ctx.chat.type === "private" ? ctx.chat.first_name : "stranger"}`
+    `Hi ${ctx.chat.type === "private" && (ctx.chat.first_name ?? "stranger")}`
   )
 );
 
@@ -57,17 +58,30 @@ const remind = () =>
       )
   );
 
+const remindTrash = () => {
+  const { roomie, done } = mapping.find(({ duty }) => duty.id === TRASHID)!;
+  if (done) return;
+  const message = [
+    "Hey, du musst den Müll rausbringen: \n",
+    ...getTrash(),
+  ].join("\n");
+  bot.telegram.sendMessage(roomie.id, message);
+};
+
 bot.command("remind", async (ctx) => {
   await remind();
   ctx.reply("Ich habe die anderen daran erinnert ihre Dienste zu machen.");
 });
-bot.on(message("text"), (ctx) => {});
 
+// send out reminders every sunday at 6pm
+schedule("0 18 * * sun", remind);
+
+// send out trash reminders every tuesday at 6pm
+schedule("0 18 * * tue", remindTrash);
+
+// launch bot
 bot.launch();
 
 // enable graceful stop
 process.once("SIGINT", () => bot.stop("SIGINT"));
 process.once("SIGTERM", () => bot.stop("SIGTERM"));
-
-// send out reminders every sunday at 6pm
-schedule("0 18 * * sun", remind);
