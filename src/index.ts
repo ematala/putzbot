@@ -14,7 +14,15 @@ bot.command("start", (ctx) =>
     `Hi ${ctx.chat.type === "private" ? ctx.chat.first_name : "stranger"}`
   )
 );
-bot.command("get", (ctx) => {});
+
+bot.command("get", (ctx) => {
+  const { duty, done } = mapping.find(
+    ({ roomie }) => roomie.id === ctx.chat.id
+  )!;
+  if (done) ctx.reply("Du bist für diese Woche fertig");
+  else ctx.reply(`Du bist dran mit ${duty.title} (${duty.description})`);
+});
+
 bot.command("getall", (ctx) => {});
 bot.command("done", (ctx) => {});
 bot.command("off", (ctx) => {});
