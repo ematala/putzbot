@@ -2,7 +2,7 @@ import "dotenv/config";
 import { Telegraf } from "telegraf";
 import { schedule } from "node-cron";
 import { duties, mapping, roomies } from "./data";
-import { getTrash } from "./utils";
+import { check, getTrash } from "./utils";
 import { TRASHID } from "./constants";
 
 if (!process.env.TELEGRAM_BOT_TOKEN)
@@ -13,13 +13,15 @@ if (roomies.length !== duties.length)
 
 const bot = new Telegraf(process.env.TELEGRAM_BOT_TOKEN);
 
-bot.command("start", (ctx) =>
+bot.command("start", (ctx) => {
+  console.info(new Date(), "\nNEW USER\n", ctx.chat);
   ctx.reply(
     `Hi ${ctx.chat.type === "private" && (ctx.chat.first_name ?? "stranger")}`
-  )
-);
+  );
+});
 
 bot.command("get", (ctx) => {
+  if (!check(ctx.chat.id)) return;
   const { duty, done } = mapping.find(
     ({ roomie }) => roomie.id === ctx.chat.id
   )!;
@@ -28,6 +30,7 @@ bot.command("get", (ctx) => {
 });
 
 bot.command("getall", (ctx) => {
+  if (!check(ctx.chat.id)) return;
   const message = mapping
     .map(({ roomie, duty, done }) =>
       done
@@ -39,6 +42,7 @@ bot.command("getall", (ctx) => {
 });
 
 bot.command("done", (ctx) => {
+  if (!check(ctx.chat.id)) return;
   const m = mapping.find(({ roomie }) => roomie.id === ctx.chat.id)!;
   if (m.done) return ctx.reply("Du bist schon fertig");
   else {
@@ -70,6 +74,7 @@ const remindTrash = () => {
 };
 
 bot.command("remind", async (ctx) => {
+  if (!check(ctx.chat.id)) return;
   await remind();
   ctx.reply("Ich habe die anderen daran erinnert ihre Dienste zu machen.");
 });
@@ -85,10 +90,16 @@ const rotate = () => {
   }
 };
 
-bot.command("rotate", rotate);
+bot.command("rotate", (ctx) => {
+  if (!check(ctx.chat.id)) return;
+  rotate();
+});
 
-// rotate duties every sunday at 6pm
-schedule("0 18 * * sun", rotate);
+// rotate duties every monday at 10am
+schedule("0 10 * * mon", rotate);
+
+// send a reminder every sunday at 6pm
+schedule("0 18 * * sun", remind);
 
 // send out trash reminders every tuesday at 6pm
 schedule("0 18 * * tue", remindTrash);

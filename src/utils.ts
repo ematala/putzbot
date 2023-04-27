@@ -1,4 +1,4 @@
-import { trash } from "./data";
+import { roomies, trash } from "./data";
 import { closestTo, format } from "date-fns";
 
 const trashMap: Record<number, string> = {
@@ -23,3 +23,5 @@ export const getTrash = () => {
   const date = format(closest, "yyyy-MM-dd");
   return trash[date].map((t) => trashMap[t]);
 };
+
+export const check = (id: number) => roomies.map((r) => r.id).includes(id);

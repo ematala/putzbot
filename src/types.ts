@@ -1,7 +1,6 @@
 export interface Roomie {
   id: number;
   name: string;
-  username: string;
 }
 
 export interface Duty {
