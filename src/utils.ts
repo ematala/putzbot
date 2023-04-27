@@ -2,11 +2,11 @@ import { roomies, trash } from "./data";
 import { closestTo, format } from "date-fns";
 
 const trashMap: Record<number, string> = {
-  0: "Papiertonne",
-  1: "Restabfalltonne",
-  2: "Biotonne",
-  3: "Wertstofftonne",
-  4: "Sperrgut, Grünabfall",
+  0: "🟦 Papiertonne",
+  1: "⬛️ Restabfalltonne",
+  2: "🟫 Biotonne",
+  3: "🟨 Wertstofftonne",
+  4: "🟧 Sperrgut, Grünabfall",
 };
 
 const parseDate = (date: string) => {

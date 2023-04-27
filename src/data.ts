@@ -5,22 +5,22 @@ export const roomies: Array<Roomie> = [];
 export const duties: Array<Duty> = [
   {
     id: 0,
-    title: "Badezimmer",
+    title: "🛀🏽 Badezimmer",
     description: "Badezimmer putzen",
   },
   {
     id: 1,
-    title: "Küche",
+    title: "👨🏽‍🍳 Küche",
     description: "Küche putzen",
   },
   {
     id: 2,
-    title: "Wohnzimmer",
+    title: "🧹 Wohnzimmer",
     description: "Wohnzimmer aufräumen",
   },
   {
     id: 3,
-    title: "Müll",
+    title: "🗑️ Müll",
     description: "Müll rausbringen",
   },
 ];
