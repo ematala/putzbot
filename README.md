@@ -1,3 +1,3 @@
 # putzbot
 
-tbd
+A Telegram bot to automate our shared flat.
