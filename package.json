@@ -4,8 +4,9 @@
   "description": "A telegram bot for automating cleaning duties",
   "scripts": {
     "dev": "ts-node src",
-    "build:local": "tsc",
-    "start:local": "tsc && node build/src"
+    "build": "tsc",
+    "start": "node build/src",
+    "deploy": "gcloud app deploy"
   },
   "prisma": {
     "seed": "ts-node prisma/seed.ts"
@@ -28,7 +29,6 @@
   },
   "dependencies": {
     "@prisma/client": "4.13.0",
-    "@vercel/node": "^2.14.0",
     "date-fns": "^2.29.3",
     "debug": "^4.3.4",
     "dotenv": "^16.0.3",
