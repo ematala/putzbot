@@ -1,12 +1,12 @@
 {
   "name": "putzbot",
   "version": "1.0.0",
-  "description": "A telegram bot for cleaning duties",
-  "main": "build/index.js",
+  "description": "A telegram bot for automating cleaning duties",
+  "main": "src/index.ts",
   "scripts": {
-    "dev": "ts-node src --watch",
+    "dev": "ts-node src",
     "build": "tsc",
-    "start": "tsc && node build"
+    "start": "tsc && node build/src"
   },
   "prisma": {
     "seed": "ts-node prisma/seed.ts"
