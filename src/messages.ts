@@ -18,7 +18,7 @@ export const getTrashReminderMessage = async () =>
     "\n"
   );
 export const getDutiesRotatedMessage = (title: string, description: string) =>
-  `Neue Woche neues Glück 🎲\n\nDu bist diese Woche dran mit ${title} (${description})`;
+  `Neue Woche neue Dienste 😍\n\nDu bist diese Woche dran mit ${title} (${description})`;
 export const getReminderMessage = (name: string, title: string) =>
   `Hey ${name}, du hast deinen Dienst (${title}) diese Woche noch nicht erledigt! 😒`;
 export const getOwnDutyMessage = (title: string, description: string) =>
