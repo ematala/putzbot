@@ -136,22 +136,23 @@ bot.command("remind", async (ctx) => {
 const rotate = async () => {
   try {
     const roomies = await prisma.roomie.findMany({ include: { duty: true } });
-    const n = await prisma.duty.count();
+    const duties = await prisma.duty.findMany();
     if (!roomies.every(({ duty, done }) => duty && done)) remind();
     else {
       roomies
         .filter(({ duty }) => duty)
-        .forEach(async ({ id, duty, dutyId }) => {
+        .forEach(async ({ id, duty }) => {
+          const newDuty = duties.at(duty?.id! % duties.length)!;
           await prisma.roomie.update({
             where: { id },
             data: {
               done: false,
-              dutyId: (dutyId! % n) + 1,
+              dutyId: newDuty.id,
             },
           });
           bot.telegram.sendMessage(
             id,
-            getDutiesRotatedMessage(duty!.title, duty!.description)
+            getDutiesRotatedMessage(newDuty.title, newDuty.description)
           );
         });
     }
