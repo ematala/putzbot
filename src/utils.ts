@@ -1,5 +1,8 @@
-import { roomies, trash } from "./data";
-import { closestTo, format } from "date-fns";
+import type { Context } from "telegraf";
+import { closestIndexTo, closestTo, format } from "date-fns";
+import { prisma } from ".";
+import { roomieIsNotRegisteredMessage } from "./messages";
+import { trash } from "./data";
 
 const trashMap: Record<number, string> = {
   0: "🟦 Papiertonne",
@@ -14,7 +17,7 @@ const parseDate = (date: string) => {
   return new Date(year, month - 1, day);
 };
 
-export const getTrash = () => {
+export const getTrashItems = async () => {
   const dates = Object.keys(trash)
     .map(parseDate)
     .filter((d) => d > new Date());
@@ -24,4 +27,32 @@ export const getTrash = () => {
   return trash[date].map((t) => trashMap[t]);
 };
 
-export const check = (id: number) => roomies.map((r) => r.id).includes(id);
+// TODO @ematala implement/fix seeds to use this function
+export const getTrashItemsNew = async () => {
+  const collection = await prisma.trashCollection.findMany({
+    include: { trash: true },
+    where: { date: { gte: new Date() } },
+  });
+  const closest = closestIndexTo(
+    new Date(),
+    collection.map((c) => c.date)
+  );
+  if (!closest) return [];
+  return collection[closest].trash.map(({ title }) => title);
+};
+
+export const check = async (ctx: Context) => {
+  try {
+    if (!ctx.chat?.id) return false;
+    const roomie = await prisma.roomie.findUnique({
+      where: { id: ctx.chat.id },
+    });
+    if (!roomie) {
+      ctx.reply(roomieIsNotRegisteredMessage);
+      return false;
+    } else return true;
+  } catch (error) {
+    console.error(error);
+    return false;
+  }
+};

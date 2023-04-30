@@ -1,0 +1,38 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Roomie {
+  id        Int      @id @default(autoincrement())
+  name      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  done      Boolean  @default(false)
+  dutyId    Int?     @unique
+  duty      Duty?    @relation(fields: [dutyId], references: [id])
+}
+
+model Duty {
+  id          Int      @id @default(autoincrement())
+  title       String
+  description String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  roomie      Roomie?
+}
+
+model Trash {
+  id              Int               @id @default(autoincrement())
+  title           String
+  trashCollection TrashCollection[]
+}
+
+model TrashCollection {
+  date  DateTime @id
+  trash Trash[]
+}

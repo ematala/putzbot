@@ -1,39 +1,9 @@
-import type { Duty, Mapping, Roomie, Trash } from "./types";
-
-export const roomies: Array<Roomie> = [];
-
-export const duties: Array<Duty> = [
-  {
-    id: 0,
-    title: "🛀🏽 Badezimmer",
-    description: "Badezimmer putzen",
-  },
-  {
-    id: 1,
-    title: "👨🏽‍🍳 Küche",
-    description: "Küche putzen",
-  },
-  {
-    id: 2,
-    title: "🧹 Wohnzimmer",
-    description: "Wohnzimmer aufräumen",
-  },
-  {
-    id: 3,
-    title: "🗑️ Müll",
-    description: "Müll rausbringen",
-  },
-];
-
-export const mapping: Array<Mapping> = Array.from({
-  length: roomies.length,
-}).map((_, i) => ({
-  roomie: roomies[i],
-  duty: duties[i],
-  done: false,
-}));
-
-export const trash: Trash = {
+// 0: "🟦 Papiertonne",
+// 1: "⬛️ Restabfalltonne",
+// 2: "🟫 Biotonne",
+// 3: "🟨 Wertstofftonne",
+// 4: "🟧 Sperrgut, Grünabfall",
+export const trash: Record<string, Array<number>> = {
   "2023-05-04": [1, 2],
   "2023-05-10": [0, 2, 3],
   "2023-05-11": [4],

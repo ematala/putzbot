@@ -1,100 +1,190 @@
 import "dotenv/config";
-import { Telegraf } from "telegraf";
+import { PrismaClient } from "@prisma/client";
 import { schedule } from "node-cron";
-import { duties, mapping, roomies } from "./data";
-import { check, getTrash } from "./utils";
-import { TRASHID } from "./constants";
+import { Telegraf } from "telegraf";
+import { check } from "./utils";
+import {
+  getDutiesRotatedMessage,
+  dutyIsDoneMessage,
+  getAllDutiesMessage,
+  getOwnDutyMessage,
+  noDutiesMessage,
+  getReminderMessage,
+  reminderIsSentMessage,
+  roomieHasNoDutyMessage,
+  roomieIsAlreadyDoneMessage,
+  roomieIsDoneMessage,
+  roomieIsOnboardedMessage,
+  getTrashReminderMessage,
+  welcomeMessage,
+} from "./messages";
 
+if (!process.env.DATABASE_URL) throw new Error("DATABASE_URL must be provided");
+if (!process.env.PASSWORD) throw new Error("PASSWORD must be provided");
 if (!process.env.TELEGRAM_BOT_TOKEN)
   throw new Error("TELEGRAM_BOT_TOKEN must be provided");
 
-if (roomies.length !== duties.length)
-  throw new Error("roomies and duties must be the same length");
+const token = process.env.TELEGRAM_BOT_TOKEN;
+const password = process.env.PASSWORD;
 
-const bot = new Telegraf(process.env.TELEGRAM_BOT_TOKEN);
+export const bot = new Telegraf(token);
+export const prisma = new PrismaClient();
 
 bot.command("start", (ctx) => {
-  console.info(new Date(), "\nNEW USER\n", ctx.chat);
-  ctx.reply(
-    `Hi ${
-      ctx.chat.type === "private" && (ctx.chat.first_name ?? "stranger")
-    } 👋🏽`
-  );
-});
-
-bot.command("get", (ctx) => {
-  if (!check(ctx.chat.id)) return;
-  const { duty, done } = mapping.find(
-    ({ roomie }) => roomie.id === ctx.chat.id
-  )!;
-  if (done) ctx.reply("Du bist für diese Woche fertig 👍🏽");
-  else ctx.reply(`Du bist dran mit ${duty.title} (${duty.description})`);
-});
-
-bot.command("getall", (ctx) => {
-  if (!check(ctx.chat.id)) return;
-  const message = mapping
-    .map(({ roomie, duty, done }) =>
-      done
-        ? `✅ ${roomie.name} ist fertig`
-        : `${roomie.name} ist dran mit ${duty.title} (${duty.description})`
-    )
-    .join("\n");
-  ctx.reply(message);
-});
-
-bot.command("done", (ctx) => {
-  if (!check(ctx.chat.id)) return;
-  const m = mapping.find(({ roomie }) => roomie.id === ctx.chat.id)!;
-  if (m.done) return ctx.reply("Du bist schon fertig 🤔");
-  else {
-    m.done = true;
-    ctx.reply("Super, du hast deinen Dienst für diese Woche erledigt! 🍻");
+  try {
+    ctx.reply(welcomeMessage);
+  } catch (error) {
+    console.log(error);
   }
 });
 
-const remind = () =>
-  Promise.all(
-    mapping
-      .filter(({ done }) => !done)
-      .map(({ roomie, duty }) =>
-        bot.telegram.sendMessage(
-          roomie.id,
-          `Hey ${roomie.name}, du hast deinen Dienst (${duty.title}) diese Woche noch nicht erledigt! 😒`
-        )
-      )
-  );
+bot.command("get", async (ctx) => {
+  try {
+    if (!(await check(ctx))) return;
+    const roomie = await prisma.roomie.findUnique({
+      where: { id: ctx.chat.id },
+      include: { duty: true },
+    });
+    const { done, duty } = roomie!;
+    if (duty && done) return ctx.reply(roomieIsDoneMessage);
+    if (!duty) return ctx.reply(roomieHasNoDutyMessage);
+    ctx.reply(getOwnDutyMessage(duty.title, duty.description));
+  } catch (error) {
+    console.error(error);
+  }
+});
 
-const remindTrash = () => {
-  const { roomie, done } = mapping.find(({ duty }) => duty.id === TRASHID)!;
-  if (done) return;
-  const message = [
-    "Hey, du musst den Müll rausbringen 🚛 \n",
-    ...getTrash(),
-  ].join("\n");
-  bot.telegram.sendMessage(roomie.id, message);
+bot.command("getall", async (ctx) => {
+  try {
+    if (!(await check(ctx))) return;
+    const roomies = await prisma.roomie.findMany({ include: { duty: true } });
+    const message = roomies
+      .filter(({ duty }) => duty)
+      .map(({ name, done, duty }) =>
+        getAllDutiesMessage(done, name, duty!.title, duty!.description)
+      )
+      .join("\n");
+    if (!message) ctx.reply(noDutiesMessage);
+    else ctx.reply(message);
+  } catch (error) {
+    console.error(error);
+  }
+});
+
+bot.command("done", async (ctx) => {
+  try {
+    if (!(await check(ctx))) return;
+    const roomie = await prisma.roomie.findUnique({
+      where: { id: ctx.chat.id },
+      include: { duty: true },
+    });
+    if (!roomie?.duty) return ctx.reply(roomieHasNoDutyMessage);
+    else if (roomie?.done) return ctx.reply(roomieIsAlreadyDoneMessage);
+    else {
+      await prisma.roomie.update({
+        where: { id: ctx.chat.id },
+        data: { done: true },
+      });
+      ctx.reply(dutyIsDoneMessage);
+      const roomies = await prisma.roomie.findMany({ include: { duty: true } });
+      if (roomies.every(({ done, duty }) => duty && done)) rotate();
+    }
+  } catch (error) {
+    console.error(error);
+  }
+});
+
+const remind = async () => {
+  try {
+    const roomies = await prisma.roomie.findMany({ include: { duty: true } });
+    Promise.all(
+      roomies
+        .filter(({ done, duty }) => duty && !done)
+        .map(({ id, name, duty }) =>
+          bot.telegram.sendMessage(id, getReminderMessage(name, duty!.title))
+        )
+    );
+  } catch (error) {
+    console.error(error);
+  }
+};
+
+// This needs to be the id of the trash duty
+const TRASHID = 4;
+const remindTrash = async () => {
+  try {
+    const roomie = await prisma.roomie.findUnique({
+      where: { dutyId: TRASHID },
+    });
+    if (!roomie || roomie.done) return;
+    bot.telegram.sendMessage(roomie.id, await getTrashReminderMessage());
+  } catch (error) {
+    console.error(error);
+  }
 };
 
 bot.command("remind", async (ctx) => {
-  if (!check(ctx.chat.id)) return;
-  await remind();
-  ctx.reply("Ich habe die anderen daran erinnert ihre Dienste zu machen.");
+  try {
+    if (!(await check(ctx))) return;
+    await remind();
+    ctx.reply(reminderIsSentMessage);
+  } catch (error) {
+    console.error(error);
+  }
 });
 
-const rotate = () => {
-  if (!mapping.every(({ done }) => done)) remind();
-  else {
-    duties.push(duties.shift()!);
-    mapping.forEach((m) => {
-      m.done = false;
-      m.duty = duties[m.duty.id];
-    });
+const rotate = async () => {
+  try {
+    const roomies = await prisma.roomie.findMany({ include: { duty: true } });
+    const n = await prisma.duty.count();
+    if (!roomies.every(({ duty, done }) => duty && done)) remind();
+    else {
+      roomies
+        .filter(({ duty }) => duty)
+        .forEach(async ({ id, duty, dutyId }) => {
+          await prisma.roomie.update({
+            where: { id },
+            data: {
+              done: false,
+              dutyId: (dutyId! % n) + 1,
+            },
+          });
+          bot.telegram.sendMessage(
+            id,
+            getDutiesRotatedMessage(duty!.title, duty!.description)
+          );
+        });
+    }
+  } catch (error) {
+    console.error(error);
   }
 };
 
-bot.command("rotate", (ctx) => {
-  if (!check(ctx.chat.id)) return;
+bot.command("rotate", async (ctx) => {
+  if (!(await check(ctx))) return;
   rotate();
+});
+
+bot.on("message", async (ctx) => {
+  try {
+    if (
+      ctx.chat.type === "private" &&
+      "text" in ctx.message &&
+      ctx.message.text === password
+    ) {
+      await prisma.roomie.upsert({
+        where: { id: ctx.chat.id },
+        update: {},
+        create: {
+          id: ctx.chat.id,
+          name: ctx.chat.first_name,
+        },
+      });
+      ctx.reply(roomieIsOnboardedMessage(ctx.chat.first_name));
+    }
+  } catch (error) {
+    console.error(error);
+  }
 });
 
 // rotate duties every monday at 10am
