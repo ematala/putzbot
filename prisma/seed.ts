@@ -23,7 +23,10 @@ const seed = async () => {
           title: "🗑️ Müll",
           description: "Müll rausbringen",
         },
-      ].map(async (data) => await prisma.duty.create({ data }))
+      ].map(
+        async ({ title, description }, idx) =>
+          await prisma.duty.create({ data: { id: idx, title, description } })
+      )
     );
 
     await Promise.all(
