@@ -4,6 +4,7 @@ import {
   dutyIsDoneMessage,
   getAllDutiesMessage,
   getOwnDutyMessage,
+  helpMessage,
   noDutiesMessage,
   reminderIsSentMessage,
   roomieHasNoDutyMessage,
@@ -96,23 +97,30 @@ export const handleRotate =
     rotate(prisma, bot);
   };
 
-export const handleMessage = (prisma: PrismaClient) => async (ctx: Context) => {
-  try {
-    if (
-      ctx.chat?.type === "private" &&
-      ctx.has(message("text")) &&
-      ctx.message.text === process.env.PASSWORD
-    ) {
-      await prisma.roomie.upsert({
-        where: { id: ctx.chat.id },
-        update: {},
-        create: {
-          id: ctx.chat.id,
-          name: ctx.chat.first_name,
-        },
-      });
-      ctx.reply(roomieIsOnboardedMessage(ctx.chat.first_name));
+export const handleRegister =
+  (prisma: PrismaClient) => async (ctx: Context) => {
+    try {
+      if (!ctx.has(message("text"))) return;
+      const password = ctx.message.text.split(" ").at(-1);
+      if (ctx.chat?.type === "private" && password === process.env.PASSWORD) {
+        await prisma.roomie.upsert({
+          where: { id: ctx.chat.id },
+          update: {},
+          create: {
+            id: ctx.chat.id,
+            name: ctx.chat.first_name,
+          },
+        });
+        ctx.reply(roomieIsOnboardedMessage(ctx.chat.first_name));
+      }
+    } catch (error) {
+      console.error(error);
     }
+  };
+
+export const handleHelp = (ctx: Context) => {
+  try {
+    ctx.reply(helpMessage);
   } catch (error) {
     console.error(error);
   }

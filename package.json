@@ -4,7 +4,8 @@
   "description": "A telegram bot for automating cleaning duties",
   "scripts": {
     "dev": "ts-node src/app.ts",
-    "build": "tsc",
+    "postinstall": "prisma generate",
+    "build": "tsc && prisma generate",
     "start": "node build/app.js",
     "deploy": "gcloud app deploy"
   },

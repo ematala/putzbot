@@ -1,10 +1,10 @@
 import { getTrashItems } from "./utils";
 
+// static messages
 export const welcomeMessage =
-  "Hi 👋🏽 Bitte gib das Passwort ein, dann füge ich dich hinzu.";
+  "Hi 👋🏽 Bitte registriere dich mit /register <passwort>";
 export const roomieIsOnboardedMessage = (name: string) =>
   `Moin ${name}, du kannst jetzt loslegen 🚀`;
-export const roomieIsNotRegisteredMessage = "Du bist noch nicht registriert 🤷🏽‍♂️";
 export const roomieIsDoneMessage = "Du bist für diese Woche fertig 👍🏽";
 export const roomieIsAlreadyDoneMessage = "Du bist schon fertig 🥳";
 export const dutyIsDoneMessage =
@@ -13,6 +13,17 @@ export const roomieHasNoDutyMessage = "Du hast noch keinen Dienst 🤔";
 export const noDutiesMessage = "Es gibt noch keine Dienste";
 export const reminderIsSentMessage =
   "Ich habe die anderen daran erinnert ihre Dienste zu machen.";
+export const helpMessage = [
+  "/register <password> - Registrieren (Passwort erforderlich)",
+  "/get - Den eigenen Dienst anzeigen",
+  "/getall - Alle Dienste anzeigen",
+  "/remind - Die anderen an ihre Dienste erinnern",
+  "/done - Den eigenen Dienst als erledigt markieren",
+  "/rotate - Dienste rotieren",
+  "/help - Hilfe anzeigen",
+].join("\n");
+
+// dynamic messages
 export const getTrashReminderMessage = async () =>
   ["Hey, du musst den Müll rausbringen 🚛 \n", ...(await getTrashItems())].join(
     "\n"

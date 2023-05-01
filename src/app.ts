@@ -1,21 +1,27 @@
-import { PrismaClient } from "@prisma/client";
 import "dotenv/config";
+import { PrismaClient } from "@prisma/client";
 import express from "express";
 import { Telegraf } from "telegraf";
-import { message } from "telegraf/filters";
 
 import {
   handleGetAllDuties,
   handleGetDuty,
-  handleMessage,
+  handleHelp,
+  handleRegister,
   handleRemind,
   handleRoomieIsDone,
   handleRotate,
   handleWelcome,
 } from "./handlers";
-import { auth, log } from "./middleware";
+import { auth } from "./middleware";
 
-["DATABASE_URL", "PASSWORD", "TELEGRAM_BOT_TOKEN", "APP_URL"].forEach((key) => {
+[
+  "DATABASE_URL",
+  "PASSWORD",
+  "TELEGRAM_BOT_TOKEN",
+  "APP_URL",
+  "WEBHOOK_SECRET",
+].forEach((key) => {
   if (!process.env[key]) throw new Error(`${key} must be provided`);
 });
 
@@ -25,47 +31,40 @@ const bot = new Telegraf(token);
 const prisma = new PrismaClient();
 
 // middleware
-bot.use(log);
+bot.use(Telegraf.log());
 bot.use(auth(prisma));
 
 // commands
 bot.command("start", handleWelcome);
+bot.command("register", handleRegister(prisma));
 bot.command("get", handleGetDuty(prisma));
 bot.command("getall", handleGetAllDuties(prisma));
 bot.command("done", handleRoomieIsDone(prisma, bot));
 bot.command("remind", handleRemind(prisma, bot));
 bot.command("rotate", handleRotate(prisma, bot));
-bot.on(message("text"), handleMessage(prisma));
+bot.command("help", handleHelp);
 
-// rotate duties every monday at 10am
-// schedule("0 10 * * mon", rotate);
+const launch = async (bot: Telegraf) => {
+  if (process.env.NODE_ENV === "development") return bot.launch();
+  const port = process.env.PORT ?? 8080;
+  const app = express();
 
-// send a reminder every sunday at 6pm
-// schedule("0 18 * * sun", remind);
+  app.use(express.json());
 
-// send out trash reminders every tuesday at 6pm
-// schedule("0 18 * * tue", remindTrash);
+  app.use(
+    await bot.createWebhook({
+      domain: process.env.APP_URL!,
+      allowed_updates: ["message"],
+      path: "/telegraf",
+      secret_token: process.env.WEBHOOK_SECRET,
+    })
+  );
 
-// launch bot
-bot.launch();
+  app.post("/", async (req, res) => res.status(200).send("OK"));
 
-// enable graceful stop
-process.once("SIGINT", () => bot.stop("SIGINT"));
-process.once("SIGTERM", () => bot.stop("SIGTERM"));
+  return app.listen(port, () => console.log("app listening on port", port));
+};
 
-// const port = process.env.PORT ?? 8080;
-// const app = express();
+const server = launch(bot);
 
-// app.use(express.json());
-
-// // app.use(async () => await bot.createWebhook({ domain: process.env.APP_URL! }));
-// app.post("/", (req, res) => {
-//   console.log("request body", req.body);
-//   res.status(200).send("OK");
-// });
-
-// const server = app.listen(port, () =>
-//   console.log("app listening on port", port)
-// );
-
-// export default server;
+export default server;

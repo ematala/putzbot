@@ -16,8 +16,3 @@ export const auth =
       console.error(error);
     }
   };
-
-export const log = (ctx: Context, next: () => Promise<void>) => {
-  console.log(new Date(), ctx.update);
-  return next();
-};
