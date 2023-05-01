@@ -1,12 +1,11 @@
 import type { PrismaClient } from "@prisma/client";
 import { closestIndexTo, closestTo, format } from "date-fns";
-import type { Context, Telegraf } from "telegraf";
+import type { Telegraf } from "telegraf";
 import { trash } from "./data";
 import {
   getDutiesRotatedMessage,
   getReminderMessage,
   getTrashReminderMessage,
-  roomieIsNotRegisteredMessage,
 } from "./messages";
 
 const trashMap: Record<number, string> = {
@@ -44,22 +43,6 @@ export const getTrashItemsNew = async (prisma: PrismaClient) => {
   );
   if (!closest) return [];
   return collection[closest].trash.map(({ title }) => title);
-};
-
-export const check = async (prisma: PrismaClient, ctx: Context) => {
-  try {
-    if (!ctx.chat?.id) return false;
-    const roomie = await prisma.roomie.findUnique({
-      where: { id: ctx.chat.id },
-    });
-    if (!roomie) {
-      ctx.reply(roomieIsNotRegisteredMessage);
-      return false;
-    } else return true;
-  } catch (error) {
-    console.error(error);
-    return false;
-  }
 };
 
 export const remind = async (prisma: PrismaClient, bot: Telegraf) => {

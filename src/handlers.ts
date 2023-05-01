@@ -12,7 +12,8 @@ import {
   roomieIsOnboardedMessage,
   welcomeMessage,
 } from "./messages";
-import { check, remind, rotate } from "./utils";
+import { remind, rotate } from "./utils";
+import { message } from "telegraf/filters";
 
 export const handleWelcome = async (ctx: Context) => {
   try {
@@ -24,7 +25,6 @@ export const handleWelcome = async (ctx: Context) => {
 
 export const handleGetDuty = (prisma: PrismaClient) => async (ctx: Context) => {
   try {
-    if (!(await check(prisma, ctx))) return;
     const roomie = await prisma.roomie.findUnique({
       where: { id: ctx.chat?.id },
       include: { duty: true },
@@ -41,7 +41,6 @@ export const handleGetDuty = (prisma: PrismaClient) => async (ctx: Context) => {
 export const handleGetAllDuties =
   (prisma: PrismaClient) => async (ctx: Context) => {
     try {
-      if (!(await check(prisma, ctx))) return;
       const roomies = await prisma.roomie.findMany({ include: { duty: true } });
       const message = roomies
         .filter(({ duty }) => duty)
@@ -59,7 +58,6 @@ export const handleGetAllDuties =
 export const handleRoomieIsDone =
   (prisma: PrismaClient, bot: Telegraf) => async (ctx: Context) => {
     try {
-      if (!(await check(prisma, ctx))) return;
       const roomie = await prisma.roomie.findUnique({
         where: { id: ctx.chat?.id },
         include: { duty: true },
@@ -86,7 +84,6 @@ export const handleRoomieIsDone =
 export const handleRemind =
   (prisma: PrismaClient, bot: Telegraf) => async (ctx: Context) => {
     try {
-      if (!(await check(prisma, ctx))) return;
       await remind(prisma, bot);
       ctx.reply(reminderIsSentMessage);
     } catch (error) {
@@ -96,7 +93,6 @@ export const handleRemind =
 
 export const handleRotate =
   (prisma: PrismaClient, bot: Telegraf) => async (ctx: Context) => {
-    if (!(await check(prisma, ctx))) return;
     rotate(prisma, bot);
   };
 
@@ -104,8 +100,7 @@ export const handleMessage = (prisma: PrismaClient) => async (ctx: Context) => {
   try {
     if (
       ctx.chat?.type === "private" &&
-      ctx.message &&
-      "text" in ctx.message &&
+      ctx.has(message("text")) &&
       ctx.message.text === process.env.PASSWORD
     ) {
       await prisma.roomie.upsert({

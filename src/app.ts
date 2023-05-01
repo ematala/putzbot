@@ -2,6 +2,8 @@ import { PrismaClient } from "@prisma/client";
 import "dotenv/config";
 import express from "express";
 import { Telegraf } from "telegraf";
+import { message } from "telegraf/filters";
+
 import {
   handleGetAllDuties,
   handleGetDuty,
@@ -11,24 +13,29 @@ import {
   handleRotate,
   handleWelcome,
 } from "./handlers";
+import { auth, log } from "./middleware";
 
-if (!process.env.DATABASE_URL) throw new Error("DATABASE_URL must be provided");
-if (!process.env.PASSWORD) throw new Error("PASSWORD must be provided");
-if (!process.env.TELEGRAM_BOT_TOKEN)
-  throw new Error("TELEGRAM_BOT_TOKEN must be provided");
+["DATABASE_URL", "PASSWORD", "TELEGRAM_BOT_TOKEN", "APP_URL"].forEach((key) => {
+  if (!process.env[key]) throw new Error(`${key} must be provided`);
+});
 
-const token = process.env.TELEGRAM_BOT_TOKEN;
+const token = process.env.TELEGRAM_BOT_TOKEN!;
 
 const bot = new Telegraf(token);
 const prisma = new PrismaClient();
 
+// middleware
+bot.use(log);
+bot.use(auth(prisma));
+
+// commands
 bot.command("start", handleWelcome);
 bot.command("get", handleGetDuty(prisma));
 bot.command("getall", handleGetAllDuties(prisma));
 bot.command("done", handleRoomieIsDone(prisma, bot));
 bot.command("remind", handleRemind(prisma, bot));
 bot.command("rotate", handleRotate(prisma, bot));
-bot.on("message", handleMessage(prisma));
+bot.on(message("text"), handleMessage(prisma));
 
 // rotate duties every monday at 10am
 // schedule("0 10 * * mon", rotate);
@@ -46,15 +53,19 @@ bot.launch();
 process.once("SIGINT", () => bot.stop("SIGINT"));
 process.once("SIGTERM", () => bot.stop("SIGTERM"));
 
-// const port = process.env.PORT ?? 3000;
-
+// const port = process.env.PORT ?? 8080;
 // const app = express();
 
-// app.use(bot.webhookCallback("/webhook"));
-// bot.telegram.setWebhook(`${process.env.APP_URL}:8443/webhook`);
+// app.use(express.json());
 
-// app.get("/", (req, res) => res.status(200).send("OK"));
+// // app.use(async () => await bot.createWebhook({ domain: process.env.APP_URL! }));
+// app.post("/", (req, res) => {
+//   console.log("request body", req.body);
+//   res.status(200).send("OK");
+// });
 
-// const server = app.listen(port);
+// const server = app.listen(port, () =>
+//   console.log("app listening on port", port)
+// );
 
 // export default server;
