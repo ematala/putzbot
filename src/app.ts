@@ -1,6 +1,7 @@
 import "dotenv/config";
 import { PrismaClient } from "@prisma/client";
 import express from "express";
+import { schedule } from "node-cron";
 import { Telegraf } from "telegraf";
 
 import {
@@ -15,6 +16,7 @@ import {
   handleWelcome,
 } from "./handlers";
 import { auth } from "./middleware";
+import { remind, remindTrash, rotate } from "./utils";
 
 [
   "DATABASE_URL",
@@ -47,6 +49,15 @@ bot.command("trash", handleTrash(prisma));
 bot.command("help", handleHelp);
 
 const launch = async (bot: Telegraf) => {
+  // rotate duties every monday at 10am
+  schedule("0 10 * * mon", () => rotate(prisma, bot));
+
+  // send a reminder every sunday at 6pm
+  schedule("0 18 * * sun", () => remind(prisma, bot));
+
+  // send out trash reminders every tuesday at 6pm
+  schedule("0 18 * * tue", () => remindTrash(prisma, bot));
+
   if (process.env.NODE_ENV === "development") return bot.launch();
   const port = process.env.PORT ?? 8080;
   const app = express();
