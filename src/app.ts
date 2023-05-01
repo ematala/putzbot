@@ -11,6 +11,7 @@ import {
   handleRemind,
   handleRoomieIsDone,
   handleRotate,
+  handleTrash,
   handleWelcome,
 } from "./handlers";
 import { auth } from "./middleware";
@@ -42,6 +43,7 @@ bot.command("getall", handleGetAllDuties(prisma));
 bot.command("done", handleRoomieIsDone(prisma, bot));
 bot.command("remind", handleRemind(prisma, bot));
 bot.command("rotate", handleRotate(prisma, bot));
+bot.command("trash", handleTrash(prisma));
 bot.command("help", handleHelp);
 
 const launch = async (bot: Telegraf) => {

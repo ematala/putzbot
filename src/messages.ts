@@ -17,17 +17,20 @@ export const helpMessage = [
   "/register <password> - Registrieren (Passwort erforderlich)",
   "/get - Den eigenen Dienst anzeigen",
   "/getall - Alle Dienste anzeigen",
-  "/remind - Die anderen an ihre Dienste erinnern",
   "/done - Den eigenen Dienst als erledigt markieren",
+  "/remind - Die anderen an ihre Dienste erinnern",
   "/rotate - Dienste rotieren",
+  "/trash - Welcher Müll muss raus?",
   "/help - Hilfe anzeigen",
 ].join("\n");
 
 // dynamic messages
 export const getTrashReminderMessage = async () =>
-  ["Hey, du musst den Müll rausbringen 🚛 \n", ...(await getTrashItems())].join(
-    "\n"
-  );
+  [
+    "🚛🚛🚛\n",
+    ...(await getTrashItems()),
+    "\nmüssen an die Straße gestellt werden.",
+  ].join("\n");
 export const getDutiesRotatedMessage = (title: string, description: string) =>
   `Neue Woche neue Dienste 😍\n\nDu bist diese Woche dran mit ${title} (${description})`;
 export const getReminderMessage = (name: string, title: string) =>

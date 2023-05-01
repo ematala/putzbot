@@ -4,6 +4,7 @@ import {
   dutyIsDoneMessage,
   getAllDutiesMessage,
   getOwnDutyMessage,
+  getTrashReminderMessage,
   helpMessage,
   noDutiesMessage,
   reminderIsSentMessage,
@@ -121,6 +122,14 @@ export const handleRegister =
 export const handleHelp = (ctx: Context) => {
   try {
     ctx.reply(helpMessage);
+  } catch (error) {
+    console.error(error);
+  }
+};
+
+export const handleTrash = (prisma: PrismaClient) => async (ctx: Context) => {
+  try {
+    ctx.reply(await getTrashReminderMessage());
   } catch (error) {
     console.error(error);
   }
