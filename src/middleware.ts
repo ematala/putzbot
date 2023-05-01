@@ -2,7 +2,15 @@ import type { PrismaClient } from "@prisma/client";
 import type { Context } from "telegraf";
 import { message } from "telegraf/filters";
 
-const protectedCommands = ["/get", "/getall", "/done", "/remind", "/rotate"];
+const protectedCommands = [
+  "/get",
+  "/getall",
+  "/done",
+  "/remind",
+  "/rotate",
+  "/trash",
+  "/help",
+];
 export const auth =
   (prisma: PrismaClient) => async (ctx: Context, next: () => Promise<void>) => {
     try {
