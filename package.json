@@ -20,6 +20,10 @@
     "automation"
   ],
   "author": "Eric Matala de Mazza",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ematala/putzbot"
+  },
   "license": "MIT",
   "devDependencies": {
     "@types/express": "^4.17.17",
