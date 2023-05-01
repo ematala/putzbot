@@ -73,7 +73,7 @@ const launch = async (bot: Telegraf) => {
     })
   );
 
-  app.post("/", async (req, res) => res.status(200).send("OK"));
+  app.get("/", async (req, res) => res.status(200).send("OK"));
 
   return app.listen(port, () => console.log("app listening on port", port));
 };
