@@ -1,0 +1,36 @@
+name: deploy-appengine
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: "read"
+  id-token: "write"
+
+jobs:
+  deploy-appengine:
+    runs-on: ubuntu-latest
+    steps:
+      - id: "checkout"
+        uses: "actions/checkout@v3"
+
+      - id: "auth"
+        uses: "google-github-actions/auth@v1"
+        with:
+          workload_identity_provider: ${{ secrets.GCLOUD_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ secrets.GCLOUD_SERVICE_ACCOUNT }}
+
+      - id: "deploy"
+        uses: "google-github-actions/deploy-appengine@v1"
+        with:
+          env_vars: |-
+            TELEGRAM_BOT_TOKEN=${{ secrets.TELEGRAM_BOT_TOKEN }}
+            DATABASE_URL=${{ secrets.DATABASE_URL }}
+            PASSWORD=${{ secrets.PASSWORD }}
+            APP_URL=${{ secrets.APP_URL }}
+            WEBHOOK_SECRET=${{ secrets.WEBHOOK_SECRET }}
+
+      - id: "test"
+        run: 'curl "${{ steps.deploy.outputs.url }}"'

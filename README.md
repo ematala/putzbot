@@ -4,6 +4,7 @@
 ![GitHub last commit](https://img.shields.io/github/last-commit/ematala/putzbot)
 ![GitHub code size in bytes](https://img.shields.io/github/languages/code-size/ematala/putzbot)
 ![GitHub release (latest by date)](https://img.shields.io/github/v/release/ematala/putzbot)
+[![deploy-appengine](https://github.com/ematala/putzbot/actions/workflows/deploy-appengine.yaml/badge.svg)](https://github.com/ematala/putzbot/actions/workflows/deploy-appengine.yaml)
 
 A Telegram bot to automate our shared flat. Users can send messages to the bot on telegram such as request their weekly duty, remind others or rotate to the next cycle.
 
